@@ -1,0 +1,42 @@
+name: FFmpeg native build
+
+on:
+  workflow_dispatch:
+    inputs:
+      rev:
+        description: 'FFmpeg/FFmpeg commit to build'
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install yasm                 \
+                               make                 \
+                               automake             \
+                               autoconf             \
+                               git                  \
+                               pkg-config           \
+                               libtool-bin          \
+                               nasm                 \
+                               gcc-mingw-w64-x86-64 \
+                               g++-mingw-w64-x86-64
+      - uses: actions/checkout@v2
+        with:
+          repository: FFmpeg/FFmpeg
+          ref: ${{ github.event.inputs.rev }}
+      - name: Configure FFmpeg build
+        run: |
+          ./configure --disable-everything --enable-avcodec --enable-shared --disable-static --enable-decoder=h264 --disable-w32threads --arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --disable-debug --enable-lto --disable-doc --disable-programs --disable-swscale --disable-avformat --disable-swresample --disable-avdevice --disable-avfilter --extra-ldflags="-static-libgcc -static-libstdc++ -static -s" --prefix=release_output
+      - name: "Build FFmpeg"
+        run: |
+          make -j4 && make install
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: natives
+          path: |
+            release_output/*
