@@ -1,0 +1,21 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: nuget/setup-nuget@v1
+        with:
+          nuget-api-key: ${{ secrets.NUGET_API_KEY }}
+          nuget-version: '5.x'
+      - name: "Publish on Nuget"
+        run: |
+          nuget pack Ryujinx.Graphics.Nvdec.Dependencies.nuspec -Suffix "build${{ github.run_number }}"
+          $file_to_publish = Get-ChildItem -Path $dir -Filter *.nupkg | Select -First 1
+          echo $file_to_publish
+          nuget push $file_to_publish -Source https://api.nuget.org/v3/index.json
