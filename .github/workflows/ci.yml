@@ -1,5 +1,4 @@
 name: FFmpeg native build
-
 on:
   workflow_dispatch:
     inputs:
