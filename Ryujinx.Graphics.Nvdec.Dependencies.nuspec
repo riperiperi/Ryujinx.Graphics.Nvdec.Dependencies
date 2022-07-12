@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>Ryujinx.Graphics.Nvdec.Dependencies</id>
-    <version>4.4.0</version>
+    <version>5.0.1</version>
     <description>This package contains Ryujinx.Graphics.Nvdec dependencies to be used by Ryujinx on Windows.</description>
     <authors>Thog</authors>
     <license type="expression">LGPL-2.1-only</license>
