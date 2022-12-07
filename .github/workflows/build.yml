@@ -1,18 +1,18 @@
 name: Build and Publish
 
 on:
-  push:
-    branches: [ master ]
+  workflow_dispatch:
+    inputs: {}
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: nuget/setup-nuget@v1
         with:
           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
-          nuget-version: '5.x'
+          nuget-version: '6.x'
       - name: "Publish on Nuget"
         run: |
           nuget pack Ryujinx.Graphics.Nvdec.Dependencies.nuspec -Suffix "build${{ github.run_number }}"
