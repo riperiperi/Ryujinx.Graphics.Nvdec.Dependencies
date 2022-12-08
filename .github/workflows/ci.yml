@@ -5,10 +5,19 @@ on:
       rev:
         description: 'FFmpeg/FFmpeg commit to build'
         required: true
+
+env:
+  DECODERS: "h264,vp8"
+
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    name: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { name: win-x64, os: ubuntu-20.04, flags: "--arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --disable-w32threads --extra-ldflags=\"-static-libgcc -static-libstdc++ -static -s\"" }
     steps:
       - name: Setup Linux dependencies
         if: runner.os == 'Linux'
@@ -29,13 +38,28 @@ jobs:
           ref: ${{ github.event.inputs.rev }}
       - name: Configure FFmpeg build
         run: |
-          ./configure --disable-everything --enable-avcodec --enable-shared --disable-static --enable-decoder="h264,vp8" --disable-w32threads --arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --disable-debug --enable-lto --disable-doc --disable-programs --disable-swscale --disable-avformat --disable-swresample --disable-avdevice --disable-avfilter --extra-ldflags="-static-libgcc -static-libstdc++ -static -s" --prefix=release_output
+          ./configure --disable-everything                  \
+                      --disable-static                      \
+                      --disable-doc                         \
+                      --disable-programs                    \
+                      --disable-swscale                     \
+                      --disable-avformat                    \
+                      --disable-swresample                  \
+                      --disable-avdevice                    \
+                      --disable-avfilter                    \
+                      --disable-debug                       \
+                      --enable-avcodec                      \
+                      --enable-shared                       \
+                      --enable-decoder=${{ env.DECODERS }}  \
+                      --enable-lto                          \
+                      ${{ matrix.platform.flags }}          \
+                      --prefix=release_output
       - name: "Build FFmpeg"
         run: |
           make -j4 && make install
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: natives
+          name: ${{ matrix.platform.name }}-binaries
           path: |
             release_output/*
