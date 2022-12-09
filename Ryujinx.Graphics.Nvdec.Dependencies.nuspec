@@ -3,16 +3,16 @@
   <metadata>
     <id>Ryujinx.Graphics.Nvdec.Dependencies</id>
     <version>5.0.1</version>
-    <description>This package contains Ryujinx.Graphics.Nvdec dependencies to be used by Ryujinx on Windows.</description>
-    <authors>Thog</authors>
+    <description>This package contains Ryujinx.Graphics.Nvdec dependencies to be used by Ryujinx.</description>
+    <authors>marysaka</authors>
     <license type="expression">LGPL-2.1-only</license>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags>ryujinx dependancies windows .net</tags>
-    <contentFiles>
-      <files include="cs\netstandard2.0\**" copyToOutput="true" buildAction="None" flatten="false"/>
-    </contentFiles>
   </metadata>
   <files>
-    <file src="deps\**" target="contentFiles\cs\netstandard2.0\" />
+    <file src="native\runtimes\linux-x64\**" target="runtimes\linux-x64\native" />
+    <file src="native\runtimes\osx-arm64\**" target="runtimes\osx-arm64\native" />
+    <file src="native\runtimes\osx-x64\**" target="runtimes\osx-x64\native" />
+    <file src="native\runtimes\win-x64\**" target="runtimes\win-x64\native" />
   </files>
 </package>
