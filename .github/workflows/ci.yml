@@ -8,6 +8,7 @@ on:
 
 env:
   DECODERS: "h264,vp8"
+  MACOSX_DEPLOYMENT_TARGET: "11.0"
 
 jobs:
   build:
@@ -17,8 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { name: win-x64, os: ubuntu-20.04, flags: "--arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --disable-w32threads --extra-ldflags=\"-static-libgcc -static-libstdc++ -static -s\"" }
+          - { name: win-x64, os: ubuntu-20.04, flags: "--arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --disable-w32threads --extra-ldflags=\"-static-libgcc -static-libstdc++ -static\"" }
           - { name: linux-x64, os: ubuntu-20.04, flags: "--arch=x86_64 --extra-ldflags=\"-static-libgcc -static-libstdc++\"" }
+          - { name: osx-x64, os: macos-latest, flags: "--arch=x86_64 --install-name-dir=\"@rpath\"" }
+          - { name: osx-arm64, os: macos-latest, flags: "--arch=arm64 --install-name-dir=\"@rpath\" --enable-neon --enable-cross-compile --cc=\"clang -arch arm64\"" }
     steps:
       - name: Setup Linux common dependencies
         if: runner.os == 'Linux'
@@ -35,6 +38,11 @@ jobs:
         if: ${{ matrix.platform.name == 'win-x64' }}
         run: |
           sudo apt-get install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64
+      - name: Setup nasm for osx-x64 dependencies
+        if: ${{ matrix.platform.name == 'osx-x64' }}
+        run: |
+          brew install nasm
+
       - uses: actions/checkout@v2
         with:
           repository: FFmpeg/FFmpeg
@@ -55,6 +63,7 @@ jobs:
                       --enable-shared                       \
                       --enable-decoder=${{ env.DECODERS }}  \
                       --enable-lto                          \
+                      --enable-stripping                    \
                       ${{ matrix.platform.flags }}          \
                       --prefix=release_output
       - name: "Build FFmpeg"
