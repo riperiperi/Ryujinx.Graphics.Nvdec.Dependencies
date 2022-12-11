@@ -20,8 +20,8 @@ jobs:
         platform:
           - { name: win-x64, os: ubuntu-20.04, flags: "--arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --disable-w32threads --extra-ldflags=\"-static-libgcc -static-libstdc++ -static\"" }
           - { name: linux-x64, os: ubuntu-20.04, flags: "--arch=x86_64 --extra-ldflags=\"-static-libgcc -static-libstdc++\"" }
-          - { name: osx-x64, os: macos-latest, flags: "--arch=x86_64 --install-name-dir=\"@rpath\"" }
-          - { name: osx-arm64, os: macos-latest, flags: "--arch=arm64 --install-name-dir=\"@rpath\" --enable-neon --enable-cross-compile --cc=\"clang -arch arm64\"" }
+          - { name: osx-x64, os: macos-latest, flags: "--arch=x86_64 --install-name-dir=\"@rpath\" --enable-cross-compile --cc=\"clang -arch x86_64\" --disable-xlib" }
+          - { name: osx-arm64, os: macos-latest, flags: "--arch=arm64 --install-name-dir=\"@rpath\" --enable-neon --enable-cross-compile --cc=\"clang -arch arm64\" --disable-xlib" }
     steps:
       - name: Setup Linux common dependencies
         if: runner.os == 'Linux'
