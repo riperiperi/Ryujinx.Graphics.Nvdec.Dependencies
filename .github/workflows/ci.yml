@@ -6,10 +6,6 @@ on:
         description: 'FFmpeg/FFmpeg commit to build'
         required: true
 
-env:
-  DECODERS: "h264,vp8"
-  MACOSX_DEPLOYMENT_TARGET: "11.0"
-
 jobs:
   build:
     name: ${{ matrix.platform.name }}
@@ -18,60 +14,37 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { name: win-x64, os: ubuntu-20.04, flags: "--arch=x86_64 --target-os=mingw32 --cross-prefix=x86_64-w64-mingw32- --disable-w32threads --extra-ldflags=\"-static-libgcc -static-libstdc++ -static\"" }
-          - { name: linux-x64, os: ubuntu-20.04, flags: "--arch=x86_64 --extra-ldflags=\"-static-libgcc -static-libstdc++\"" }
-          - { name: osx-x64, os: macos-latest, flags: "--arch=x86_64 --install-name-dir=\"@rpath\" --enable-cross-compile --cc=\"clang -arch x86_64\" --disable-xlib" }
-          - { name: osx-arm64, os: macos-latest, flags: "--arch=arm64 --install-name-dir=\"@rpath\" --enable-neon --enable-cross-compile --cc=\"clang -arch arm64\" --disable-xlib" }
+        - { name: win-x64,     os: ubuntu-20.04,   arch: x86_64, target_os: win   }
+        - { name: linux-x64,   os: ubuntu-20.04,   arch: x86_64, target_os: linux }
+        - { name: linux-arm64, os: ubuntu-20.04,   arch: arm64,  target_os: linux }
+        - { name: osx-x64,     os: macos-latest,   arch: x86_64, target_os: macos }
+        - { name: osx-arm64,   os: macos-latest,   arch: arm64,  target_os: macos }
     steps:
-      - name: Setup Linux common dependencies
+      - name: Setup qemu static
+        uses: docker/setup-qemu-action@v3
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install yasm                 \
-                               make                 \
-                               automake             \
-                               autoconf             \
-                               git                  \
-                               pkg-config           \
-                               libtool-bin          \
-                               nasm
-      - name: Setup MinGW64 dependencies
-        if: ${{ matrix.platform.name == 'win-x64' }}
-        run: |
-          sudo apt-get install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64
-      - name: Setup nasm for osx-x64 dependencies
-        if: ${{ matrix.platform.name == 'osx-x64' }}
-        run: |
-          brew install nasm
-
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           repository: FFmpeg/FFmpeg
-          ref: ${{ github.event.inputs.rev }}
-      - name: Configure FFmpeg build
-        run: |
-          ./configure --disable-everything                  \
-                      --disable-static                      \
-                      --disable-doc                         \
-                      --disable-programs                    \
-                      --disable-swscale                     \
-                      --disable-avformat                    \
-                      --disable-swresample                  \
-                      --disable-avdevice                    \
-                      --disable-avfilter                    \
-                      --disable-debug                       \
-                      --enable-avcodec                      \
-                      --enable-shared                       \
-                      --enable-decoder=${{ env.DECODERS }}  \
-                      --enable-lto                          \
-                      --enable-stripping                    \
-                      ${{ matrix.platform.flags }}          \
-                      --prefix=release_output
-      - name: "Build FFmpeg"
-        run: |
-          make -j4 && make install
-      - name: Upload artifact
+          ref: ${{ github.event.inputs.rev }} 
+      - uses: actions/checkout@v4
+        with:
+          path: 'nvdec_deps'
+      - name: Build and prepare release
+        run: nvdec_deps/ci/run.sh $PWD $PWD/nvdec_deps/native/${{ matrix.platform.name }} ${{ matrix.platform.arch }} ${{ matrix.platform.target_os }}
+        shell: bash
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.platform.name }}-binaries
-          path: |
-            release_output/*
+          path: install_output
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: Update ${{ matrix.platform.name }} binaries
+          title: Update ${{ matrix.platform.name }} binaries
+          body: This PR has been auto-generated to update the ${{ matrix.platform.name }} binaries.
+          branch: update-${{ matrix.platform.name }}-binaries
+          path: 'nvdec_deps'
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
