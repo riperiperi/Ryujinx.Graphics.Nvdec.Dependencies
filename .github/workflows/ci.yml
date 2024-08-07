@@ -15,6 +15,7 @@ jobs:
       matrix:
         platform:
         - { name: win-x64,     os: ubuntu-20.04,   arch: x86_64, target_os: win   }
+        - { name: win-arm64,   os: ubuntu-20.04,   arch: arm64,  target_os: win   }
         - { name: linux-x64,   os: ubuntu-20.04,   arch: x86_64, target_os: linux }
         - { name: linux-arm64, os: ubuntu-20.04,   arch: arm64,  target_os: linux }
         - { name: osx-x64,     os: macos-latest,   arch: x86_64, target_os: macos }
